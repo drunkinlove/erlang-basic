@@ -1,2 +1,2 @@
-# erlang-fibonacci
-Fibonacci in Erlang with minimal arithmetic
+# erlang-module1
+Tasks for getting the hang of Erlang

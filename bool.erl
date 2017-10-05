@@ -11,5 +11,5 @@ b_and(_,_) -> true.
 b_or(true, true) -> true;
 b_or(_,_) -> false.
 
-b_xor(X, X) when X =:= X -> false;
+b_xor(X, Y) when X =:= Y -> false;
 b_xor(_,_) -> true.

@@ -1,6 +1,6 @@
 -module(listfunctions).
 
--export([create/1, createrev/1, print/1, printodd/1, filter/2, concatenate/1]).
+-export([create/1, createrev/1, print/1, printodd/1, filter/2, reverse/1, concatenate/1, flatten/1, dna/1, cut_rdna/2]).
 
 
 create(Num) when Num > 0 -> auxcreate([], 1, Num).
@@ -19,7 +19,7 @@ print(Num) when Num > 0 -> printone(1, Num).
 
 printone(X, X) -> io:format("~p ~n",[X]);
 printone(Step, Num) ->
-	io:format("~p ~n",[Step]),
+	io:format("~p ~n", [Step]),
 	printone(Step + 1, Num).
 
 
@@ -27,25 +27,58 @@ printodd(Num) when Num > 0 -> printoneodd(1, Num).
 
 printoneodd(X, X) -> io:format("~p ~n",[X]);
 printoneodd(Step, Num) ->
-	io:format("~p ~n",[Step]),
+	io:format("~p ~n", [Step]),
 	printoneodd(Step + 2, Num). % нужно только заменить Step + 1 на Step + 2
 
 
 filter(List, Val) when Val > 0 -> [N || N <- List, N >= Val].
 
 
-%reverse(List) -> 
-%	Len = length(List),
-%	grabreverse(List, Len, []).
+reverse(L) -> auxreverse(L,[]).
 
-%grabreverse(_List, 0, RevList) -> RevList;
-%grabreverse(List, Step, RevList) ->
-%	grabreverse(List, Step-1, RevList ++ grabtail(List, Step)).
+auxreverse([], Acc) -> Acc;
+auxreverse([H|T], Acc) -> auxreverse(T, [H|Acc]).
 
-%grabtail([_|X], 0) -> X;
-%grabtail([_|X], N) -> grabtail(X, N-1).
+	
+concatenate([]) -> [];
+concatenate(X) -> auxconcat(X, []).
+
+auxconcat([], Acc) -> Acc;
+auxconcat([H|T], Acc) when is_list(H)=:=false -> auxconcat(T, Acc++[H]);
+auxconcat([H|T], Acc) -> auxconcat(T, Acc++H).
 
 
-concatenate(List) ->
-	NewList=[],
-	NewList ++ [X || [[X]] <- List].
+flatten(X) -> auxflatten(X, []).
+
+auxflatten([], Acc) -> Acc;
+auxflatten([H|T], Acc) when is_list(H)=:=true -> auxflatten(T, Acc++concatenate(H));
+auxflatten([H|T], Acc) -> auxflatten(T, Acc++[H]).
+
+
+dna(X) -> auxdna(X, []).
+
+auxdna([], Acc) -> Acc;
+auxdna([H|T], Acc) ->
+	case H of
+		g -> auxdna(T, Acc++[c]);
+		c -> auxdna(T, Acc++[g]); 
+		t -> auxdna(T, Acc++[a]); 
+		a -> auxdna(T, Acc++[u]); 
+		71 -> auxdna(T, Acc++"C");
+		67 -> auxdna(T, Acc++"G");
+		84 -> auxdna(T, Acc++"A");
+		65 -> auxdna(T, Acc++"U")
+	end.
+
+
+cut_rdna(Inp, Cut) -> checkfirst(Inp, Cut, []).
+%стоит заметить, что работает на любых строках, не только последовательностях нуклеотидов
+
+checkfirst(Inp, [], Acc) -> Inp; %если нечего вырезать, вернем список
+checkfirst([], Cut, Acc) -> [Acc]; %если уже не из чего вырезать, вернем аккум
+checkfirst([A, B, C|T], [X, Y, Z], Acc) when A=:=X, B=:=Y, C=:=Z -> checkfirst(T, [X, Y, Z], Acc);
+%если первые три элемента списка совпадают с вырезаемыми, просто проверяем дальше без них
+checkfirst(Inp, Cut, Acc) when length(Inp) =< 2 -> Acc ++ Inp;
+%если в списке осталось менее трех элементов, возвращаем его вместе с аккумом
+checkfirst([A, B, C|T], [X, Y, Z], Acc) -> checkfirst([B, C] ++ T, [X, Y, Z], Acc ++ [A]).
+%если первые три не совпадают, то один скидываем в аккум и идем дальше

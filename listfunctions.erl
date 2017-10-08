@@ -75,7 +75,7 @@ cut_rdna(Inp, Cut) -> checkfirst(Inp, Cut, []).
 %стоит заметить, что работает на любых строках, не только последовательностях нуклеотидов
 
 checkfirst(Inp, [], Acc) -> Inp; %если нечего вырезать, вернем список
-checkfirst([], Cut, Acc) -> [Acc]; %если уже не из чего вырезать, вернем аккум
+checkfirst([], Cut, Acc) -> Acc; %если уже не из чего вырезать, вернем аккум
 checkfirst([A, B, C|T], [X, Y, Z], Acc) when A=:=X, B=:=Y, C=:=Z -> checkfirst(T, [X, Y, Z], Acc);
 %если первые три элемента списка совпадают с вырезаемыми, просто проверяем дальше без них
 checkfirst(Inp, Cut, Acc) when length(Inp) =< 2 -> Acc ++ Inp;

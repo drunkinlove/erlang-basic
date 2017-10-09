@@ -40,7 +40,6 @@ auxreverse([], Acc) -> Acc;
 auxreverse([H|T], Acc) -> auxreverse(T, [H|Acc]).
 
 	
-concatenate([]) -> [];
 concatenate(X) -> auxconcat(X, []).
 
 auxconcat([], Acc) -> Acc;

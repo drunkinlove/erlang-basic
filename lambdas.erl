@@ -30,8 +30,7 @@ ardist(Points1, Points2) ->
 
 mapfoldl(Fun, L) ->
 
-	MapFoldl = fun MapFoldl(Operation, LIn) -> [lists:foldl(Operation, 0, [X]) || X <- LIn] end,
+	MapFoldl = fun MapFoldl(Operation, LIn) -> 
+		[Operation(lists:foldl(fun erlang:'*'/2, 1, [X])) || X <- LIn] end,
 
 	MapFoldl(Fun, L).
-
-	% Лямбда принимает операцию над одним аргументом, а фолдл - над двумя. Это проблема

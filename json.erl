@@ -1,4 +1,4 @@
--module(json).E
+-module(json).
 -export([new/2, read/2, write/3]).
 
 

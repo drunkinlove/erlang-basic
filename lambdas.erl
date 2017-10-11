@@ -1,5 +1,5 @@
 -module(lambdas).
--export([recursivearith/3, distance/2, ardist/2, mapfoldl/2]).
+-export([recursivearith/3, distance/2, ardist/2, mapfoldl/2, filterfoldl/2]).
 
 recursivearith(Op, L1, L2) -> 
 
@@ -30,7 +30,14 @@ ardist(Points1, Points2) ->
 
 mapfoldl(Fun, L) ->
 
-	MapFoldl = fun MapFoldl(Operation, LIn) -> 
-		[Operation(lists:foldl(fun erlang:'*'/2, 1, [X])) || X <- LIn] end,
+	MapFoldl = fun MapFoldl(Fun1, L1) -> 
+		[Fun1(lists:foldl(fun erlang:'*'/2, 1, [X])) || X <- L1] end,
 
 	MapFoldl(Fun, L).
+
+filterfoldl(Pred, L) ->
+
+	FilterFoldl = fun FilterFoldl(Pred1, L1) -> 
+		[lists:foldl(fun erlang:'*'/2, 1, [X]) || X <- L1, Pred1(X)=:=true] end,
+
+	FilterFoldl(Pred, L).

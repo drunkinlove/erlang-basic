@@ -1,2 +1,2 @@
-# erlang-module1
+# erlang-basic
 Tasks for getting the hang of Erlang

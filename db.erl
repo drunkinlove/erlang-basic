@@ -26,6 +26,29 @@ match(Element, Db) ->
 destroy(Db) when is_list(Db) =:= true -> file:delete(Db);
 destroy(Db) -> [].
 
+batch_delete(KeyList, Db) -> 
+	case length(KeyList) > valueof(batch, Db) of
+		true -> {error, batch_limit};
+		false -> Db -- [{Key, valueof(Key, Db)} || Key <- KeyList]
+	end.
+% если параметр максимального размера batch не задан, 
+% любое число будет больше []
+	
+batch_read(KeyList, Db) ->
+	case length(KeyList) > valueof(batch, Db) of 
+		true -> {error, batch_limit};
+		false -> [{Key, valueof(Key, Db)} || Key <- exists(KeyList, Db) ]
+	end.
+
+append(Key, Element, Db) -> 
+	case valueof(append, Db) of
+		deny -> {error, forbidden};
+		allow -> Db ++ [{Key, Element}];
+		[] -> Db ++ [{Key, Element}]
+	end.
+
+% далее идут вспомогательные функции
+
 valueof(Key, Db) ->
 	case [Y || {X, Y} <- Db, X =:= Key] of
 		[Element] -> Element;
@@ -46,25 +69,4 @@ oneexists(Key, Db) ->
 	case [Y || {X, Y} <- Db, X =:= Key] of
 		[] -> false;
 		[_] -> true
-	end.
-
-batch_delete(KeyList, Db) -> 
-	case length(KeyList) > valueof(batch, Db) of
-		true -> {error, batch_limit};
-		false -> Db -- [{Key, valueof(Key, Db)} || Key <- KeyList]
-	end.
-% если параметр максимального размера batch не задан, 
-% любое число будет больше []
-	
-batch_read(KeyList, Db) ->
-	case length(KeyList) > valueof(batch, Db) of 
-		true -> {error, batch_limit};
-		false -> [{Key, valueof(Key, Db)} || Key <- exists(KeyList, Db) ]
-	end.
-
-append(Key, Element, Db) -> 
-	case valueof(append, Db) of
-		deny -> {error, forbidden};
-		allow -> Db ++ [{Key, Element}];
-		[] -> Db ++ [{Key, Element}]
 	end.

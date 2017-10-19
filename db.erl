@@ -1,50 +1,77 @@
 -module(db).
 -export([new/0, new/1, write/3, delete/2, read/2, match/2, destroy/1, batch_delete/2,
-	batch_read/2, append/3, valueof/2]).
+	batch_read/2, append/3, valueof/2, exists/2, oneexists/2, listexists/2, replaceone/3]).
 
 
 new() -> [].
 
-new(Parameters) -> Parameters.
+new(Parameters) -> {Parameters, []}.
 
-write(Key, Element, Db) -> 
-	[{Key, Element}] ++ Db -- [{Key, valueof(Key, Db)}].
+write(Key, Element, {P, Db}) -> 
+	case oneexists(Key, Db) of
+		true -> 
+			{P, replaceone(Key, Element, Db)};
+		false -> 
+			{P, [{Key, Element} | Db]}
+	end.
+
 % удаляет существующую запись по введенному ключу, если она есть.
 
-delete(Key, Db) -> 
-	[{X, Y} || {X, Y} <- Db, X =/= Key].
+delete(Key, {P, Db}) ->
+	case oneexists(Key, Db) of
+		true ->
+			{P, [{X, Y} || {X, Y} <- Db, X =/= Key]};
+		false ->
+			{error, instance}
+	end.
 
-read(Key, Db) ->
+read(Key, {P, Db}) ->
 	case [Y || {X, Y} <- Db, X =:= Key] of
 		[] -> {error, instance};
 		[Element] -> {ok, Element}
 	end.
 
-match(Element, Db) ->
+match(Element, {P, Db}) ->
 	[X || {X, Y} <- Db, Y =:= Element].
 
-destroy(Db) when is_list(Db) =:= true -> file:delete(Db);
-destroy(Db) -> [].
+destroy(Db) when is_list(Db) =:= true ->
+	case file:delete(Db) of
+		ok -> {ok, filedeleted};
+	    _ -> {error, filenotfound}
+	end;
+destroy(Db) ->
+	[],
+	ok.
 
-batch_delete(KeyList, Db) -> 
-	case length(KeyList) > valueof(batch, Db) of
-		true -> {error, batch_limit};
-		false -> Db -- [{Key, valueof(Key, Db)} || Key <- KeyList]
+batch_delete(KeyList, {P, Db}) -> 
+	case length(exists(KeyList, Db)) =:= length(KeyList) of
+		true ->
+			case length(KeyList) > valueof(batch, P) of
+				true -> {error, batch_limit};
+				false -> {P, Db -- [{Key, valueof(Key, Db)} || Key <- KeyList]}
+			end;
+		false ->
+			{error, instance}
 	end.
 % если параметр максимального размера batch не задан, 
 % любое число будет больше []
 	
-batch_read(KeyList, Db) ->
-	case length(KeyList) > valueof(batch, Db) of 
-		true -> {error, batch_limit};
-		false -> [{Key, valueof(Key, Db)} || Key <- exists(KeyList, Db) ]
+batch_read(KeyList, {P, Db}) ->
+	case length(exists(KeyList, Db)) =:= length(KeyList) of
+		true ->
+			case length(KeyList) > valueof(batch, P) of 
+				true -> {error, batch_limit};
+				false -> {P, [{Key, valueof(Key, Db)} || Key <- exists(KeyList, Db)]}
+			end;
+		false ->
+			{error, instance}
 	end.
 
-append(Key, Element, Db) -> 
-	case valueof(append, Db) of
+append(Key, Element, {P, Db}) -> 
+	case valueof(append, P) of
 		deny -> {error, forbidden};
-		allow -> Db ++ [{Key, Element}];
-		[] -> Db ++ [{Key, Element}]
+		allow -> {P, [{Key, Element}|Db]};
+		[] -> {P, [{Key, Element}|Db]}
 	end.
 
 % далее идут вспомогательные функции
@@ -56,12 +83,12 @@ valueof(Key, Db) ->
 	end.
 
 exists([H|T], Db) -> exists([H|T], Db, []).
-exists(_, [], Acc) -> false;
-exists([], _, Acc) when Acc =:= [] -> false;
+% по списку ключей возвращает список элементов, которые в базе существуют
+exists(_, [], Acc) -> Acc;
 exists([], _, Acc) -> Acc;
 exists([H|T], Db, Acc) ->
 	case oneexists(H, Db) of
-		true -> exists(T, Db, Acc ++ [H]);
+		true -> exists(T, Db, [H|Acc]);
 		false -> exists(T, Db, Acc)
 	end.
 
@@ -70,3 +97,17 @@ oneexists(Key, Db) ->
 		[] -> false;
 		[_] -> true
 	end.
+
+listexists([H|T], Db) ->
+	case [Y || {X, Y} <- Db, X =:= H] of
+		[] -> false;
+		[_|_] when []=:=T -> true;
+		[_|_] -> listexists(T, Db)
+	end.
+
+replaceone(Key, Value, Db) -> replaceone(Key, Value, Db, []).
+replaceone(Key, Value, [], Acc) -> Acc;
+replaceone(Key, Value, [{X, Y}|T], Acc) when X =:= Key ->
+	replaceone(Key, Value, T, [{X, Value}|Acc]);
+replaceone(Key, Value, [H|T], Acc) -> 
+	replaceone(Key, Value, T, [H|Acc]).

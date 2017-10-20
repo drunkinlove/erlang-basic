@@ -44,27 +44,27 @@ destroy(Db) ->
 	ok.
 
 batch_delete(KeyList, {P, Db}) -> 
-	case length(exists(KeyList, Db)) =:= length(KeyList) of
+	case length(KeyList) =< valueof(batch, P) of
 		true ->
-			case length(KeyList) > valueof(batch, P) of
-				true -> {error, batch_limit};
-				false -> {P, Db -- [{Key, valueof(Key, Db)} || Key <- KeyList]}
+			case length(exists(KeyList, Db)) =:= length(KeyList) of
+				true -> {P, Db -- [{Key, valueof(Key, Db)} || Key <- KeyList]};
+				false -> {error, instance}
 			end;
 		false ->
-			{error, instance}
+			{error, batch_limit}
 	end.
 % если параметр максимального размера batch не задан, 
 % любое число будет больше []
 	
-batch_read(KeyList, {P, Db}) ->
-	case length(exists(KeyList, Db)) =:= length(KeyList) of
+batch_read(KeyList, {P, Db}) -> 
+	case length(KeyList) =< valueof(batch, P) of
 		true ->
-			case length(KeyList) > valueof(batch, P) of 
-				true -> {error, batch_limit};
-				false -> {P, [{Key, valueof(Key, Db)} || Key <- exists(KeyList, Db)]}
+			case length(exists(KeyList, Db)) =:= length(KeyList) of
+				true -> {P, [{Key, valueof(Key, Db)} || Key <- exists(KeyList, Db)]};
+				false -> {error, instance}
 			end;
 		false ->
-			{error, instance}
+			{error, batch_limit}
 	end.
 
 append(Key, Element, {P, Db}) -> 

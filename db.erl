@@ -5,7 +5,33 @@
 
 new() -> {[], []}.
 
-new(Parameters) -> {Parameters, []}.
+new(Parameters) ->
+	case is_list(Parameters) of
+		true ->
+			case length(Parameters) of
+				2 ->
+					case {checkappend(Parameters), checkbatch(Parameters)} of
+						{ok, ok} -> {Parameters, []};
+						_ -> {error, bad_parameters}
+					end;
+				1 ->
+					case oneexists(append, Parameters) of
+						true ->
+							case checkappend(Parameters) of
+								ok -> {Parameters, []};
+								_ -> {error, bad_parameters}
+							end;
+						false ->
+							case checkbatch(Parameters) of
+								ok -> {Parameters, []};
+								_ -> {error, bad_parameters}
+							end
+					end;
+				_ -> {error, bad_parameters}
+			end;
+		false ->
+			{error, badarg}
+	end.
 
 write(Key, Element, {P, Db}) -> 
 	case oneexists(Key, Db) of
@@ -14,7 +40,6 @@ write(Key, Element, {P, Db}) ->
 		false -> 
 			{P, [{Key, Element} | Db]}
 	end.
-
 % удаляет существующую запись по введенному ключу, если она есть.
 
 delete(Key, {P, Db}) ->
@@ -111,3 +136,19 @@ replaceone(Key, Value, [{X, Y}|T], Acc) when X =:= Key ->
 	replaceone(Key, Value, T, [{X, Value}|Acc]);
 replaceone(Key, Value, [H|T], Acc) -> 
 	replaceone(Key, Value, T, [H|Acc]).
+
+checkappend(Parameters) ->
+	case valueof(append, Parameters) of
+		allow -> ok;
+		deny -> ok;
+		_ -> error
+	end.
+checkbatch(Parameters) ->
+	case is_integer(valueof(batch, Parameters)) of
+		true ->
+			case valueof(batch, Parameters) >= 0 of
+				true -> ok;
+				_ -> error
+			end;
+		_ -> error
+	end.

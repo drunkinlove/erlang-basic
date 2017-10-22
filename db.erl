@@ -3,7 +3,7 @@
 	batch_read/2, append/3, valueof/2, exists/2, oneexists/2, listexists/2, replaceone/3]).
 
 
-new() -> [].
+new() -> {[], []}.
 
 new(Parameters) -> {Parameters, []}.
 

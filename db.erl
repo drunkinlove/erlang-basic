@@ -1,36 +1,14 @@
 -module(db).
 -export([new/0, new/1, write/3, delete/2, read/2, match/2, destroy/1, batch_delete/2,
-	batch_read/2, append/3, valueof/2, exists/2, oneexists/2, listexists/2, replaceone/3]).
+	batch_read/2, append/3]).
 
 
 new() -> {[], []}.
 
 new(Parameters) ->
-	case is_list(Parameters) of
-		true ->
-			case length(Parameters) of
-				2 ->
-					case {checkappend(Parameters), checkbatch(Parameters)} of
-						{ok, ok} -> {Parameters, []};
-						_ -> {error, bad_parameters}
-					end;
-				1 ->
-					case oneexists(append, Parameters) of
-						true ->
-							case checkappend(Parameters) of
-								ok -> {Parameters, []};
-								_ -> {error, bad_parameters}
-							end;
-						false ->
-							case checkbatch(Parameters) of
-								ok -> {Parameters, []};
-								_ -> {error, bad_parameters}
-							end
-					end;
-				_ -> {error, bad_parameters}
-			end;
-		false ->
-			{error, badarg}
+	case validate(Parameters) of
+		ok -> {Parameters, []};
+		_ -> {error, bad_parameters}
 	end.
 
 write(Key, Element, {P, Db}) -> 
@@ -137,17 +115,11 @@ replaceone(Key, Value, [{X, Y}|T], Acc) when X =:= Key ->
 replaceone(Key, Value, [H|T], Acc) -> 
 	replaceone(Key, Value, T, [H|Acc]).
 
-checkappend(Parameters) ->
-	case valueof(append, Parameters) of
-		allow -> ok;
-		deny -> ok;
-		_ -> error
-	end.
-checkbatch(Parameters) ->
-	case is_integer(valueof(batch, Parameters)) of
-		true ->
-			case valueof(batch, Parameters) >= 0 of
-				true -> ok;
+validate(Parameters) ->
+	case [N || N <- [is_integer(Y) || {X, Y} <- Parameters, X =:= batch, Y >= 0], N =:= false] of
+		[] ->
+			case [Y || {X, Y} <- Parameters, X =:= append, Y =/= allow, Y =/= deny] of
+				[] -> ok;
 				_ -> error
 			end;
 		_ -> error

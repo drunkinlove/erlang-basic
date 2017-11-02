@@ -101,12 +101,13 @@ oneexists(Key, Db) ->
 		[_] -> true
 	end.
 
-listexists([H|T], Db) ->
-	case [Y || {X, Y} <- Db, X =:= H] of
-		[] -> false;
-		[_|_] when []=:=T -> true;
-		[_|_] -> listexists(T, Db)
-	end.
+%%% not needed
+%%% listexists([H|T], Db) ->
+%%%		case [Y || {X, Y} <- Db, X =:= H] of
+%%%			[] -> false;
+%%%			[_|_] when []=:=T -> true;
+%%%			[_|_] -> listexists(T, Db)
+%%%		end.
 
 replaceone(Key, Value, Db) -> replaceone(Key, Value, Db, []).
 replaceone(Key, Value, [], Acc) -> Acc;

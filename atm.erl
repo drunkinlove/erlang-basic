@@ -40,9 +40,6 @@ wait({call, From}, {inserted, CardNo}, {Cards, none, Input}) ->
 		[X] -> {next_state, wait, {Cards, CardNo, []}, [{reply, From, card_ok}]};
 		[] ->
 			io:fwrite("Sorry, unrecognized card. Returning to initial screen...~n"),
-			{next_state, wait, {Cards, none, []}, [{reply, From, returning}]};
-		_ ->
-			io:fwrite("An error has occured. Returning to initial screen...~n"),
 			{next_state, wait, {Cards, none, []}, [{reply, From, returning}]}
 	end;
 wait({call, From}, {pressed, Button}, {Cards, none, Input}) ->

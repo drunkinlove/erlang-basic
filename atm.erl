@@ -39,9 +39,7 @@ init({Cards, CurrentNo, Input}) ->
 	{ok, State, {Cards, CurrentNo, Input}}.
 
 wait({call, From}, {inserted, CardNo}, {Cards, CurrentNo, Input}) ->
-	{next_state, check_card, {Cards, CardNo, Input}};
-wait(internal, wait, {Cards, CurrentNo, Input}) ->
-	{next_state, wait, {Cards, CurrentNo, Input}}.
+	{next_state, check_card, {Cards, CardNo, Input}}.
 
 check_card(internal, check_card, {Cards, CurrentNo, Input}) ->
 	case [X || {X, _, _} <- Cards, X =:= CurrentNo] of
@@ -99,7 +97,7 @@ check_sum(internal, check_sum, {Cards, CurrentNo, Input}) ->
 			[{Pin, OldSum}] = [{Y, Z} || {X, Y, Z} <- Cards, X =:= CurrentNo],
 			{next_state, wait, {[{CurrentNo, Pin, NewSum}] ++ Cards -- [{CurrentNo, Pin, OldSum}], none, []}};
 		[NewSum] ->
-			io:fwrite("Insufficent balance, sorry. Try again~n"),
+			io:fwrite("Insufficient balance, sorry. Try again~n"),
 			{next_state, wait_for_sum, {Cards, CurrentNo, []}};
 		_ ->
 			io:fwrite("An error has occured. Returning to initial screen...~n"),

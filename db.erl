@@ -47,6 +47,8 @@ destroy(Db) ->
 	ok.
 
 batch_delete(KeyList, {P, Db}) -> 
+	% если параметр максимального размера batch не задан, 
+	% любое число будет больше []
 	case length(KeyList) =< valueof(batch, P) of
 		true ->
 			case length(exists(KeyList, Db)) =:= length(KeyList) of
@@ -56,8 +58,6 @@ batch_delete(KeyList, {P, Db}) ->
 		false ->
 			{error, batch_limit}
 	end.
-% если параметр максимального размера batch не задан, 
-% любое число будет больше []
 	
 batch_read(KeyList, {P, Db}) -> 
 	case length(KeyList) =< valueof(batch, P) of
@@ -77,7 +77,7 @@ append(Key, Element, {P, Db}) ->
 		[] -> {P, [{Key, Element}|Db]}
 	end.
 
-% далее идут вспомогательные функции
+%%% далее идут вспомогательные функции
 
 valueof(Key, Db) ->
 	case [Y || {X, Y} <- Db, X =:= Key] of
@@ -100,14 +100,6 @@ oneexists(Key, Db) ->
 		[] -> false;
 		[_] -> true
 	end.
-
-%%% not needed
-%%% listexists([H|T], Db) ->
-%%%		case [Y || {X, Y} <- Db, X =:= H] of
-%%%			[] -> false;
-%%%			[_|_] when []=:=T -> true;
-%%%			[_|_] -> listexists(T, Db)
-%%%		end.
 
 replaceone(Key, Value, Db) -> replaceone(Key, Value, Db, []).
 replaceone(Key, Value, [], Acc) -> Acc;
